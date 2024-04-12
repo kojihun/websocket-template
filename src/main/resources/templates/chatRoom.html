@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>websocket-template</title>
+  <style>
+    body {
+      background-color: #f7f7f7;
+      margin: 0;
+      padding: 0;
+    }
+    .chat-container {
+      max-width: 500px;
+      margin: 20px auto;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .chat-header {
+      padding: 10px 20px;
+      background-color: #0084ff;
+      color: #fff;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+    .chat-messages {
+      padding: 20px;
+      overflow-y: auto;
+      max-height: 300px;
+      list-style-type: none; /* ul 요소의 bullet 제거 */
+      margin: 0;
+      padding: 0;
+    }
+    .message {
+      margin-bottom: 15px;
+      overflow: hidden; /* 자식 요소의 float 속성이 부모 요소에 영향을 주지 않도록 설정 */
+      padding-right: 40px;
+    }
+    .message .bubble {
+      padding: 10px 15px;
+      border-radius: 20px;
+      display: inline-block;
+      word-wrap: break-word;
+    }
+    .message .sender {
+      font-size: 0.8em;
+      color: #888;
+      margin-bottom: 5px;
+    }
+    .other .bubble {
+      background-color: #f1f0f0;
+      color: #333;
+      float: left; /* 왼쪽으로 정렬 */
+    }
+    .own .bubble {
+      background-color: #0084ff;
+      color: #fff;
+      float: right; /* 오른쪽으로 정렬 */
+    }
+    .input-container {
+      padding: 10px;
+      border-top: 1px solid #ddd;
+    }
+    .input-container input[type="text"] {
+      width: calc(100% - 20px);
+      padding: 8px;
+      border: none;
+      border-radius: 5px;
+      outline: none;
+    }
+    .input-container input[type="submit"] {
+      background-color: #0084ff;
+      color: #fff;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .input-container input[type="submit"]:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+<div class="chat-container">
+  <div class="chat-header">websocket template</div>
+  <div class="chat-messages" id="chat-messages">
+    <ul id="messageArea">
+    </ul>
+  </div>
+  <div class="input-container">
+    <input type="text" id="message-input" placeholder="Type your message...">
+    <input type="submit" value="Send" id="send-button" onclick="sendMessage()">
+  </div>
+</div>
+
+<script th:inline="javascript">
+  const websocket = new WebSocket("ws://localhost:8080/ws/chat");
+  websocket.onmessage = onMessage;
+  websocket.onopen = onOpen;
+  websocket.onclose = onClose;
+
+  const username = [[${name}]];
+
+  function sendMessage() {
+    var message = document.getElementById("message-input").value;
+    if(message != "") {
+      websocket.send(username + ":" + message);
+      document.getElementById("message-input").value = "";
+    }
+  }
+
+  function onMessage(event) {
+    var input = event.data.split(":");
+    var sessionId = input[0];
+    var message = input[1];
+
+    if(message == " 님이 입장하셨습니다.") {
+      message = event.data;
+    }
+
+    if(message == undefined) {
+      message = "채팅이 종료되었습니다.";
+    }
+
+    if(sessionId == username) {
+      var tag = "<li class='message own'>";
+      tag += "<div class='bubble'>";
+      tag += "<div class='sender'>" + username + "</div>";
+      tag += message;
+      tag += "</div>";
+      tag += "</li>";
+
+      var messageArea = document.getElementById("messageArea");
+      messageArea.innerHTML += tag;
+    }else {
+      var tag = "<li class='message other'>";
+      tag += "<div class='bubble'>";
+      tag += "<div class='sender'>" + sessionId + "</div>";
+      tag += message;
+      tag += "</div>";
+      tag += "</li>";
+
+      var messageArea = document.getElementById("messageArea");
+      messageArea.innerHTML += tag;
+    }
+
+    document.getElementById("messageArea").scrollTop = document.getElementById("messageArea").scrollHeight;
+  }
+
+  function onOpen(event) {
+    var message = username + ": 님이 입장하셨습니다.";
+    websocket.send(message);
+  }
+
+  function onClose(event) {
+    var message = username + ": 님이 방을 나가셨습니다.";
+    websocket.send(message);
+  }
+</script>
+</body>
+</html>

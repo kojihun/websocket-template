@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Generate Random Name</title>
+</head>
+<body>
+<p>Please click the button</p>
+<button onclick="enterChatRoom()">Generate Random Name</button>
+
+<script>
+  function enterChatRoom() {
+    var randomName = generateRandomName();
+    window.location.href = "/" + randomName;
+  }
+
+  function generateRandomName() {
+    var names = ["Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace"];
+    var randomIndex = Math.floor(Math.random() * names.length);
+    return names[randomIndex];
+  }
+</script>
+</body>
+</html>
